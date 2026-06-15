@@ -18,12 +18,16 @@ export interface GameState {
 	playerWeapon: Weapon | null;
 	enemyWeapon: Weapon | null;
 	status: GameStatus;
+	rerollsRemaining: number;
+	usedWeapons: Weapon[];
 }
 
 export interface RoundState {
 	playerWeapon: Weapon;
 	enemyWeapon: null;
 	status: 'round_active';
+	rerollsRemaining: number;
+	usedWeapons: Weapon[];
 }
 
 export interface FightResult {
@@ -42,7 +46,7 @@ export let weaponList: Weapon[] = [];
 export function init(): GameState {
 	weaponList = weapons;
 
-	const playerWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
+	const playerWeapon = getRandomWeapon(weapons, []);
 
 	weaponList = weapons;
 
@@ -53,8 +57,16 @@ export function init(): GameState {
 		enemyCurrentHealth: INITIAL_HEALTH,
 		playerWeapon,
 		enemyWeapon: null,
-		status: 'round_active'
+		status: 'round_active',
+		rerollsRemaining: 2,
+		usedWeapons: [playerWeapon]
 	};
+}
+
+function getRandomWeapon(pool: Weapon[], exclude: Weapon[]): Weapon {
+	const available = pool.filter((w) => !exclude.some((e) => e.name === w.name));
+	if (available.length === 0) throw new Error('No weapons available');
+	return available[Math.floor(Math.random() * available.length)];
 }
 
 export function newRound(status: GameStatus): RoundState {
@@ -64,10 +76,14 @@ export function newRound(status: GameStatus): RoundState {
 
 	weaponList = weapons;
 
+	const playerWeapon = getRandomWeapon(weaponList, []);
+
 	return {
-		playerWeapon: weaponList[Math.floor(Math.random() * weaponList.length)],
+		playerWeapon,
 		enemyWeapon: null,
-		status: 'round_active'
+		status: 'round_active',
+		rerollsRemaining: 2,
+		usedWeapons: [playerWeapon]
 	};
 }
 
@@ -106,6 +122,14 @@ function resolveCombat(
 	}
 
 	return { playerHealth, enemyHealth, enemyWeapon, status: 'round_complete' };
+}
+
+export function rerollWeapon(state: RoundState): RoundState {
+	if (state.rerollsRemaining <= 0) throw new Error('No rerolls remaining');
+
+	const newWeapon = getRandomWeapon(weapons, state.usedWeapons);
+
+	return { ...state, playerWeapon: newWeapon, rerollsRemaining: state.rerollsRemaining - 1 };
 }
 
 export function fight(

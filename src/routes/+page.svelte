@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    import { fight, init, newRound, INITIAL_HEALTH, type GameState, type FightResult, type RoundState } from "$lib";
+    import { fight, init, newRound, rerollWeapon, INITIAL_HEALTH, type GameState, type FightResult, type RoundState } from "$lib";
 
     let state: GameState = {
         playerMaxHealth: INITIAL_HEALTH,
@@ -9,7 +9,9 @@
         enemyCurrentHealth: INITIAL_HEALTH,
         playerWeapon: null,
         enemyWeapon: null,
-        status: 'not_started'
+        status: 'not_started',
+        rerollsRemaining: 2,
+        usedWeapons: []
     };
 
     function triggerInit() {
@@ -28,8 +30,28 @@
             state.playerWeapon = response.playerWeapon;
             state.enemyWeapon = response.enemyWeapon;
             state.status = response.status;
+            state.rerollsRemaining = response.rerollsRemaining;
+            state.usedWeapons = response.usedWeapons;
         }
 
+    }
+
+    function triggerReroll() {
+        const roundState: RoundState = {
+            playerWeapon: state.playerWeapon!,
+            enemyWeapon: null,
+            status: 'round_active',
+            rerollsRemaining: state.rerollsRemaining,
+            usedWeapons: state.usedWeapons
+        };
+
+        try {
+            const result = rerollWeapon(roundState);
+            state.playerWeapon = result.playerWeapon;
+            state.rerollsRemaining = result.rerollsRemaining;
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     function triggerFight() {
@@ -58,8 +80,10 @@
             <div class="flex flex-col items-center justify-center w-full">
                 <h1 class="text-2xl font-bold">Player</h1>
                 <p class="text-lg">Health: {state.playerCurrentHealth} / {state.playerMaxHealth}</p>
-                <p class="text-lg">Weapon name: {state.playerWeapon!.name}</p>
-                <p class="text-lg">Weapon description: {state.playerWeapon!.description}</p>
+                {#if state.playerWeapon !== null}
+                    <p class="text-lg">Weapon name: {state.playerWeapon.name}</p>
+                    <p class="text-lg">Weapon description: {state.playerWeapon.description}</p>
+                {/if}
             </div>
         </div>
     {/if}
@@ -72,6 +96,9 @@
         <button class="btn btn-xl variant-filled-warning" on:click={triggerNewRound}>Next Round</button>
     {:else if state.status === 'round_active'}
         <button class="btn btn-xl variant-filled-error" on:click={triggerFight}>Fight</button>
+        <button class="btn btn-xl variant-filled" on:click={triggerReroll} disabled={state.rerollsRemaining <= 0}>
+            Reroll ({state.rerollsRemaining})
+        </button>
     {:else if state.status === 'won'}
         <p class="p">You won !</p>
         <button class="btn btn-xl variant-filled-primary" on:click={triggerInit}>Play again</button>
