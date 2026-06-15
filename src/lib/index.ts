@@ -38,6 +38,8 @@ export interface FightResult {
 	playerLost: boolean;
 }
 
+export const INITIAL_HEALTH = 10;
+
 const weapons = weaponData as Weapon[];
 
 export let weaponList: Weapon[] = [];
@@ -45,10 +47,10 @@ export let weaponList: Weapon[] = [];
 export function init(): GameState {
 	weaponList = weapons;
 
-	let playerMaxHealth = 10;
-	let playerCurrentHealth = 10;
-	let enemyMaxHealth = 10;
-	let enemyCurrentHealth = 10;
+	const playerMaxHealth = INITIAL_HEALTH;
+	const playerCurrentHealth = INITIAL_HEALTH;
+	const enemyMaxHealth = INITIAL_HEALTH;
+	const enemyCurrentHealth = INITIAL_HEALTH;
 	let playerWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
 	let enemyWeapon: Weapon | null = null;
 	let hasInit = true;

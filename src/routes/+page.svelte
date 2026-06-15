@@ -1,12 +1,12 @@
 <script lang="ts">
 
-    import { fight, init, newRound, type GameState, type FightResult, type RoundState } from "$lib";
+    import { fight, init, newRound, INITIAL_HEALTH, type GameState, type FightResult, type RoundState } from "$lib";
 
     let state: GameState = {
-        playerMaxHealth: 10,
-        playerCurrentHealth: 10,
-        enemyMaxHealth: 10,
-        enemyCurrentHealth: 10,
+        playerMaxHealth: INITIAL_HEALTH,
+        playerCurrentHealth: INITIAL_HEALTH,
+        enemyMaxHealth: INITIAL_HEALTH,
+        enemyCurrentHealth: INITIAL_HEALTH,
         playerWeapon: null,
         enemyWeapon: null,
         hasInit: false,
