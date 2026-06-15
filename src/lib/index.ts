@@ -8,6 +8,8 @@ export interface Weapon {
 	hitRange?: number;
 }
 
+export type GameStatus = 'not_started' | 'round_active' | 'round_complete' | 'won' | 'lost';
+
 export interface GameState {
 	playerMaxHealth: number;
 	playerCurrentHealth: number;
@@ -15,27 +17,20 @@ export interface GameState {
 	enemyCurrentHealth: number;
 	playerWeapon: Weapon | null;
 	enemyWeapon: Weapon | null;
-	hasInit: boolean;
-	hasRound: boolean;
-	hasFought: boolean;
-	playerWon: boolean;
-	playerLost: boolean;
+	status: GameStatus;
 }
 
 export interface RoundState {
 	playerWeapon: Weapon;
 	enemyWeapon: null;
-	hasRound: boolean;
-	hasFought: boolean;
+	status: 'round_active';
 }
 
 export interface FightResult {
 	playerHealth: number;
 	enemyHealth: number;
 	enemyWeapon: Weapon | null;
-	hasFought: boolean;
-	playerWon: boolean;
-	playerLost: boolean;
+	status: 'round_complete' | 'won' | 'lost';
 }
 
 export const INITIAL_HEALTH = 10;
@@ -47,48 +42,33 @@ export let weaponList: Weapon[] = [];
 export function init(): GameState {
 	weaponList = weapons;
 
-	const playerMaxHealth = INITIAL_HEALTH;
-	const playerCurrentHealth = INITIAL_HEALTH;
-	const enemyMaxHealth = INITIAL_HEALTH;
-	const enemyCurrentHealth = INITIAL_HEALTH;
-	let playerWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
-	let enemyWeapon: Weapon | null = null;
-	let hasInit = true;
-	let hasRound = true;
-	let hasFought = false;
-	let playerWon = false;
-	let playerLost = false;
+	const playerWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
 
 	weaponList = weapons;
 
 	return {
-		playerMaxHealth,
-		playerCurrentHealth,
-		enemyMaxHealth,
-		enemyCurrentHealth,
+		playerMaxHealth: INITIAL_HEALTH,
+		playerCurrentHealth: INITIAL_HEALTH,
+		enemyMaxHealth: INITIAL_HEALTH,
+		enemyCurrentHealth: INITIAL_HEALTH,
 		playerWeapon,
-		enemyWeapon,
-		hasInit,
-		hasRound,
-		hasFought,
-		playerWon,
-		playerLost
+		enemyWeapon: null,
+		status: 'round_active'
 	};
 }
 
-export function newRound(hasInit: boolean): RoundState {
-	if (hasInit) {
-		weaponList = weapons;
-
-		return {
-			playerWeapon: weaponList[Math.floor(Math.random() * weaponList.length)],
-			enemyWeapon: null,
-			hasRound: true,
-			hasFought: false
-		};
-	} else {
+export function newRound(status: GameStatus): RoundState {
+	if (status === 'not_started') {
 		throw new Error('Game not initialized');
 	}
+
+	weaponList = weapons;
+
+	return {
+		playerWeapon: weaponList[Math.floor(Math.random() * weaponList.length)],
+		enemyWeapon: null,
+		status: 'round_active'
+	};
 }
 
 function calculateDamage(weapon: Weapon): number {
@@ -106,14 +86,7 @@ function resolveCombat(
 	enemyWeapon: Weapon | null
 ): FightResult {
 	if (playerDamages === enemyDamages) {
-		return {
-			playerHealth,
-			enemyHealth,
-			enemyWeapon,
-			hasFought: true,
-			playerWon: false,
-			playerLost: false
-		};
+		return { playerHealth, enemyHealth, enemyWeapon, status: 'round_complete' };
 	}
 
 	if (playerDamages > enemyDamages) {
@@ -126,47 +99,22 @@ function resolveCombat(
 	if (enemyHealth <= 0) enemyHealth = 0;
 
 	if (enemyHealth === 0) {
-		return {
-			playerHealth,
-			enemyHealth,
-			enemyWeapon,
-			hasFought: true,
-			playerWon: true,
-			playerLost: false
-		};
+		return { playerHealth, enemyHealth, enemyWeapon, status: 'won' };
 	}
 	if (playerHealth === 0) {
-		return {
-			playerHealth,
-			enemyHealth,
-			enemyWeapon,
-			hasFought: true,
-			playerWon: false,
-			playerLost: true
-		};
+		return { playerHealth, enemyHealth, enemyWeapon, status: 'lost' };
 	}
 
-	return {
-		playerHealth,
-		enemyHealth,
-		enemyWeapon,
-		hasFought: true,
-		playerWon: false,
-		playerLost: false
-	};
+	return { playerHealth, enemyHealth, enemyWeapon, status: 'round_complete' };
 }
 
 export function fight(
 	playerHealth: number,
 	enemyHealth: number,
 	playerWeapon: Weapon,
-	hasInit: boolean,
-	hasRound: boolean,
-	hasFought: boolean
+	status: GameStatus
 ): FightResult {
-	if (!hasInit) throw new Error('Game not initialized');
-	if (!hasRound) throw new Error('Round not initialized');
-	if (hasFought) throw new Error('Round already played');
+	if (status !== 'round_active') throw new Error('Round not ready');
 
 	const playerDamages = calculateDamage(playerWeapon);
 
