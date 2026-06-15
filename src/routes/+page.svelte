@@ -47,12 +47,12 @@
         }
 
         if(response !== null) {
-            state.playerCurrentHealth = response[0];
-            state.enemyCurrentHealth = response[1];
-            state.enemyWeapon = response[2];
-            state.hasFought = response[3];
-            state.playerWon = response[4];
-            state.playerLost = response[5];
+            state.playerCurrentHealth = response.playerHealth;
+            state.enemyCurrentHealth = response.enemyHealth;
+            state.enemyWeapon = response.enemyWeapon;
+            state.hasFought = response.hasFought;
+            state.playerWon = response.playerWon;
+            state.playerLost = response.playerLost;
         }
     }
 
