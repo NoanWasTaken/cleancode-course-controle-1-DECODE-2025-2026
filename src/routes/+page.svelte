@@ -1,12 +1,12 @@
 <script lang="ts">
 
-    import { fight, init, newRound } from "$lib";
+    import { fight, init, newRound, type GameState, type FightResult, type RoundState } from "$lib";
 
-    let state: any = {
-        playerMaxHealth: null,
-        playerCurrentHealth: null,
-        enemyMaxHealth: null,
-        enemyCurrentHealth: null,
+    let state: GameState = {
+        playerMaxHealth: 10,
+        playerCurrentHealth: 10,
+        enemyMaxHealth: 10,
+        enemyCurrentHealth: 10,
         playerWeapon: null,
         enemyWeapon: null,
         hasInit: false,
@@ -21,7 +21,7 @@
     }
 
     function triggerNewRound() {
-        let response = null;
+        let response: RoundState | null = null;
         try {        
             response = newRound(state.hasInit);
         } catch (error) {
@@ -38,10 +38,10 @@
     }
 
     function triggerFight() {
-        let response = null;
+        let response: FightResult | null = null;
 
         try {        
-            response = fight(state.playerCurrentHealth, state.enemyCurrentHealth, state.playerWeapon, state.hasInit, state.hasRound, state.hasFought);
+            response = fight(state.playerCurrentHealth, state.enemyCurrentHealth, state.playerWeapon!, state.hasInit, state.hasRound, state.hasFought);
         } catch (error) {
             console.error(error);
         }
