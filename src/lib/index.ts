@@ -58,15 +58,31 @@ function calculateDamage(weapon: any): number {
     return weapon.baseDamage;
 }
 
+interface FightResult {
+    playerHealth: number;
+    enemyHealth: number;
+    enemyWeapon: any;
+    hasFought: boolean;
+    playerWon: boolean;
+    playerLost: boolean;
+}
+
 function resolveCombat(
     playerHealth: number,
     enemyHealth: number,
     playerDamages: number,
     enemyDamages: number,
     enemyWeapon: any
-): Array<number | boolean> {
+): FightResult {
     if (playerDamages === enemyDamages) {
-        return [playerHealth, enemyHealth];
+        return {
+            playerHealth,
+            enemyHealth,
+            enemyWeapon,
+            hasFought: true,
+            playerWon: false,
+            playerLost: false
+        };
     }
 
     if (playerDamages > enemyDamages) {
@@ -79,16 +95,16 @@ function resolveCombat(
     if (enemyHealth <= 0) enemyHealth = 0;
 
     if (enemyHealth === 0) {
-        return [playerHealth, enemyHealth, enemyWeapon, true, true, false];
+        return { playerHealth, enemyHealth, enemyWeapon, hasFought: true, playerWon: true, playerLost: false };
     }
     if (playerHealth === 0) {
-        return [playerHealth, enemyHealth, enemyWeapon, true, false, true];
+        return { playerHealth, enemyHealth, enemyWeapon, hasFought: true, playerWon: false, playerLost: true };
     }
 
-    return [playerHealth, enemyHealth, enemyWeapon, true, false, false];
+    return { playerHealth, enemyHealth, enemyWeapon, hasFought: true, playerWon: false, playerLost: false };
 }
 
-export function fight(playerHealth: number, enemyHealth: number, playerWeapon: any, hasInit: boolean, hasRound: boolean, hasFought: boolean): Array<number|boolean> {
+export function fight(playerHealth: number, enemyHealth: number, playerWeapon: any, hasInit: boolean, hasRound: boolean, hasFought: boolean): FightResult {
     if (!hasInit) throw new Error('Game not initialized');
     if (!hasRound) throw new Error('Round not initialized');
     if (hasFought) throw new Error('Round already played');
