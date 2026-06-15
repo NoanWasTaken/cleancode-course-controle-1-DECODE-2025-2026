@@ -94,6 +94,44 @@ function calculateDamage(weapon: Weapon): number {
 	return weapon.baseDamage;
 }
 
+function victoryAssigner(
+	playerHealth: number,
+	enemyHealth: number
+): 'won' | 'lost' | 'round_complete' {
+	if (playerHealth <= 0) return 'lost';
+	if (enemyHealth <= 0) return 'won';
+	return 'round_complete';
+}
+
+function whoTakesDamage(playerDamages: number, enemyDamages: number): 'player' | 'enemy' | 'none' {
+	if (playerDamages > enemyDamages) return 'enemy';
+	if (enemyDamages > playerDamages) return 'player';
+	return 'none';
+}
+
+function applyDamage(
+	playerHealth: number,
+	enemyHealth: number,
+	playerDamages: number,
+	enemyDamages: number
+): { playerHealth: number; enemyHealth: number } {
+	if (playerDamages === enemyDamages) {
+		return { playerHealth, enemyHealth };
+	}
+
+	const damageReceiver = whoTakesDamage(playerDamages, enemyDamages);
+	if (damageReceiver === 'player') {
+		playerHealth -= enemyDamages - playerDamages;
+	} else if (damageReceiver === 'enemy') {
+		enemyHealth -= playerDamages - enemyDamages;
+	}
+
+	if (playerHealth <= 0) playerHealth = 0;
+	if (enemyHealth <= 0) enemyHealth = 0;
+
+	return { playerHealth, enemyHealth };
+}
+
 function resolveCombat(
 	playerHealth: number,
 	enemyHealth: number,
@@ -101,27 +139,12 @@ function resolveCombat(
 	enemyDamages: number,
 	enemyWeapon: Weapon | null
 ): FightResult {
-	if (playerDamages === enemyDamages) {
-		return { playerHealth, enemyHealth, enemyWeapon, status: 'round_complete' };
-	}
+	const updatedHealths = applyDamage(playerHealth, enemyHealth, playerDamages, enemyDamages);
+	playerHealth = updatedHealths.playerHealth;
+	enemyHealth = updatedHealths.enemyHealth;
 
-	if (playerDamages > enemyDamages) {
-		enemyHealth -= playerDamages - enemyDamages;
-	} else {
-		playerHealth -= enemyDamages - playerDamages;
-	}
-
-	if (playerHealth <= 0) playerHealth = 0;
-	if (enemyHealth <= 0) enemyHealth = 0;
-
-	if (enemyHealth === 0) {
-		return { playerHealth, enemyHealth, enemyWeapon, status: 'won' };
-	}
-	if (playerHealth === 0) {
-		return { playerHealth, enemyHealth, enemyWeapon, status: 'lost' };
-	}
-
-	return { playerHealth, enemyHealth, enemyWeapon, status: 'round_complete' };
+	const victory = victoryAssigner(playerHealth, enemyHealth);
+	return { playerHealth, enemyHealth, enemyWeapon, status: victory };
 }
 
 export function rerollWeapon(state: RoundState): RoundState {
@@ -143,7 +166,7 @@ export function fight(
 	const playerDamages = calculateDamage(playerWeapon);
 
 	weaponList = weapons;
-	const enemyWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
+	const enemyWeapon = getRandomWeapon(weaponList, [playerWeapon]);
 	const enemyDamages = calculateDamage(enemyWeapon);
 
 	return resolveCombat(playerHealth, enemyHealth, playerDamages, enemyDamages, enemyWeapon);
