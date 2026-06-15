@@ -114,23 +114,15 @@ function resolveCombat(
 }
 
 export function fight(playerHealth: number, enemyHealth: number, playerWeapon: any, hasInit: boolean, hasRound: boolean, hasFought: boolean): Array<number|boolean> {
-    if(hasInit){
-        if(hasRound){
-            if(!hasFought) {
-                const playerDamages = calculateDamage(playerWeapon);
+    if (!hasInit) throw new Error('Game not initialized');
+    if (!hasRound) throw new Error('Round not initialized');
+    if (hasFought) throw new Error('Round already played');
 
-                weaponList = weapons;
-                const enemyWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
-                const enemyDamages = calculateDamage(enemyWeapon);
+    const playerDamages = calculateDamage(playerWeapon);
 
-                return resolveCombat(playerHealth, enemyHealth, playerDamages, enemyDamages, enemyWeapon);
-            }else{
-                throw new Error('Round already played');
-            }
-        }else{
-            throw new Error('Round not initialized');
-        }
-    }else{
-        throw new Error('Game not initialized');
-    }
+    weaponList = weapons;
+    const enemyWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
+    const enemyDamages = calculateDamage(enemyWeapon);
+
+    return resolveCombat(playerHealth, enemyHealth, playerDamages, enemyDamages, enemyWeapon);
 }
