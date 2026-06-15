@@ -52,35 +52,10 @@ export function newRound(hasInit: boolean) {
 }
 
 function calculateDamage(weapon: any): number {
-    let damages = 0;
-
-    switch (weapon.name) {
-        case 'hatchet':
-        case 'knife':
-        case 'spear':
-            damages += 1;
-            break;
-        case 'sword':
-        case 'halberd':
-            damages += 5;
-            break;
-        case 'bow':
-            damages += 1 * (Math.floor(Math.random() * 5));
-            break;
-        case 'crossbow':
-            damages += 2 * (Math.floor(Math.random() * 5));
-            break;
-        case 'darts':
-            damages += 1 * (Math.floor(Math.random() * 3));
-            break;
-        case 'dagger':
-            damages += 3;
-            break;
-        default:
-            throw new Error('Invalid weapon');
+    if (weapon.hitRange) {
+        return weapon.baseDamage * Math.floor(Math.random() * weapon.hitRange);
     }
-
-    return damages;
+    return weapon.baseDamage;
 }
 
 function resolveCombat(
